@@ -58,7 +58,7 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
         if (nodeInfo != null) {
             nodeInfo?.run {
                 if (reloadPage) {
-                    currentView.findViewById<Button>(R.id.btn_hide).visibility = View.GONE
+                    currentView.findViewById<View>(R.id.btn_hide).visibility = View.GONE
                 }
 
                 val shellHandler = openExecutor(this)
@@ -75,9 +75,9 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
     private fun openExecutor(nodeInfo: RunnableNode): ShellHandlerBase? {
         var forceStopRunnable: Runnable? = null
 
-        val btnHide = currentView.findViewById<Button>(R.id.btn_hide)
-        val btnExit = currentView.findViewById<Button>(R.id.btn_exit)
-        val btnCopy = currentView.findViewById<Button>(R.id.btn_copy)
+        val btnHide = currentView.findViewById<View>(R.id.btn_hide)
+        val btnExit = currentView.findViewById<View>(R.id.btn_exit)
+        val btnCopy = currentView.findViewById<View>(R.id.btn_copy)
         val shellOutput = currentView.findViewById<TextView>(R.id.shell_output)
         val actionProgress = currentView.findViewById<ProgressBar>(R.id.action_progress)
         val titleView = currentView.findViewById<TextView>(R.id.title)
