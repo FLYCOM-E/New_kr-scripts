@@ -32,27 +32,24 @@ export TMPDIR="$TEMP_DIR"
 # toolkit工具目录
 export TOOLKIT="$({TOOLKIT})"
 # 添加toolkit添加为应用程序目录
-if [[ ! "$TOOLKIT" = "" ]]; then
-    # export PATH="$PATH:$TOOLKIT"
+if [ ! "$TOOLKIT" = "" ]; then
     PATH="$PATH:$TOOLKIT"
 fi
 
 # 安装busybox完整功能
-if [[ -f "$TOOLKIT/install_busybox.sh" ]]; then
+if [ -f "$TOOLKIT/install_busybox.sh" ]; then
     sh "$TOOLKIT/install_busybox.sh"
 fi
 
 # 判断是否有指定执行目录，跳转到起始目录
-if [[ "$START_DIR" != "" ]] && [[ -d "$START_DIR" ]]
-then
+if [ "$START_DIR" != "" ] && [ -d "$START_DIR" ]; then
     cd "$START_DIR"
 fi
 
 # 运行脚本
-if [[ -f "$script_path" ]]; then
+if [ -f "$script_path" ]; then
     chmod 755 "$script_path"
-    # sh "$script_path"     # 2019.09.02 before
-    source "$script_path"   # 2019.09.02 after
+    source "$script_path"
 else
-    echo "${script_path} 已丢失" 1>&2
+    echo "${script_path} 已丢失"
 fi

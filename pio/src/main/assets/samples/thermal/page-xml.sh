@@ -1,4 +1,5 @@
-source $START_DIR/samples/thermal/path_config.sh
+#!/system/bin/sh
+source "$START_DIR/samples/thermal/path_config.sh"
 
 # 构成界面
 
@@ -32,9 +33,9 @@ function build_node(){
     </action>"
 }
 
-if [[ -d "$output_dir" ]]; then
-    for file in `ls $output_dir`; do
-        build_node $file
+if [ -d "$output_dir" ]; then
+    for file in $(ls $output_dir); do
+        build_node "$file"
     done
 fi
 
