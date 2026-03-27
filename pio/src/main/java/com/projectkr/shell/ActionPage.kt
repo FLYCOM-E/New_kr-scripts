@@ -1,5 +1,5 @@
 package com.projectkr.shell
-
+import com.omarea.krscript.R as KR
 import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.app.Activity
 import android.app.ActivityManager
@@ -14,6 +14,7 @@ import android.os.Handler
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -31,8 +32,6 @@ import com.omarea.krscript.ui.ActionListFragment
 import com.omarea.krscript.ui.DialogLogFragment
 import com.omarea.krscript.ui.ParamsFileChooserRender
 import com.omarea.krscript.ui.PageMenuLoader
-import kotlinx.android.synthetic.main.activity_action_page.*
-
 
 class ActionPage : AppCompatActivity() {
     private val progressBarDialog = ProgressBarDialog(this)
@@ -41,18 +40,18 @@ class ActionPage : AppCompatActivity() {
     private lateinit var currentPageConfig: PageNode
     private var autoRunItemId = ""
 
+    private lateinit var mainList: View
+    private lateinit var actionPageFab: ImageButton
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 如果应用还没启动，就直接打开了actionPage(通常是PIO的快捷方式)，先跳转到启动页面
         if (!ScriptEnvironmen.isInited()) {
             val initIntent = Intent(this.applicationContext, SplashActivity::class.java)
             initIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
             initIntent.putExtras(this.intent)
             initIntent.putExtra("JumpActionPage", true)
             startActivity(initIntent)
-            // overridePendingTransition(0, 0)
-
             finish()
             return
         }
@@ -64,14 +63,13 @@ class ActionPage : AppCompatActivity() {
         setSupportActionBar(toolbar)
         setTitle(R.string.app_name)
 
-        // 显示返回按钮
+        mainList = findViewById(R.id.main_list)
+        actionPageFab = findViewById(R.id.action_page_fab)
+
         supportActionBar!!.setHomeButtonEnabled(true)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
-        toolbar.setNavigationOnClickListener {
-            finish()
-        }
+        toolbar.setNavigationOnClickListener { finish() }
 
-        // 读取intent里的参数
         val intent = this.intent
         if (intent.extras != null) {
             val extras = intent.extras
@@ -98,13 +96,10 @@ class ActionPage : AppCompatActivity() {
                                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 putExtra("config", page.onlineHtmlPage)
                             })
-                        } catch (ex: Exception) {
-                        }
+                        } catch (ex: Exception) {}
                     }
 
-                    if (page.title.isNotEmpty()) {
-                        title = page.title
-                    }
+                    if (page.title.isNotEmpty()) title = page.title
                     currentPageConfig = page
                 } else {
                     Toast.makeText(this, "页面信息无效", Toast.LENGTH_SHORT).show()
@@ -121,39 +116,25 @@ class ActionPage : AppCompatActivity() {
 
     private var actionShortClickHandler = object : KrScriptActionHandler {
         override fun onActionCompleted(runnableNode: RunnableNode) {
-            if (runnableNode.autoFinish) {
-                finishAndRemoveTask()
-            } else if (runnableNode.reloadPage) {
-                loadPageConfig()
-            }
+            if (runnableNode.autoFinish) finishAndRemoveTask()
+            else if (runnableNode.reloadPage) loadPageConfig()
         }
 
         override fun addToFavorites(clickableNode: ClickableNode, addToFavoritesHandler: KrScriptActionHandler.AddToFavoritesHandler) {
-            val page = if (clickableNode is PageNode) {
-                clickableNode
-            } else if (clickableNode is RunnableNode) {
-                currentPageConfig
-            } else {
-                return
-            }
+            val page = if (clickableNode is PageNode) clickableNode
+            else if (clickableNode is RunnableNode) currentPageConfig
+            else return
 
             val intent = Intent()
-
             intent.component = ComponentName(this@ActionPage.applicationContext, ActionPage::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
             intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
-            if (clickableNode is RunnableNode) {
-                intent.putExtra("autoRunItemId", clickableNode.key)
-            }
-
+            if (clickableNode is RunnableNode) intent.putExtra("autoRunItemId", clickableNode.key)
             intent.putExtra("page", page)
-
             addToFavoritesHandler.onAddToFavorites(clickableNode, intent)
         }
 
-        override fun onSubPageClick(pageNode: PageNode) {
-            _openPage(pageNode)
-        }
+        override fun onSubPageClick(pageNode: PageNode) { _openPage(pageNode) }
 
         override fun openFileChooser(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
             return chooseFilePath(fileSelectedInterface)
@@ -185,9 +166,8 @@ class ActionPage : AppCompatActivity() {
         }
     }
 
-    private var menuOptions:ArrayList<PageMenuOption>? = null
+    private var menuOptions: ArrayList<PageMenuOption>? = null
 
-    // 右上角菜单的创建
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         if (menuOptions == null) {
             menuOptions = PageMenuLoader(applicationContext, currentPageConfig).load()
@@ -204,91 +184,60 @@ class ActionPage : AppCompatActivity() {
             }
         }
 
-        return true // super.onCreateOptionsMenu(menu)
+        return true
     }
 
     private fun addFab(menuOption: PageMenuOption) {
-        action_page_fab.run {
-            visibility = View.VISIBLE
-            setOnClickListener {
-                onMenuItemClick(menuOption)
-            }
+        actionPageFab.visibility = View.VISIBLE
+        actionPageFab.setOnClickListener { onMenuItemClick(menuOption) }
 
-            if (menuOption.type == "file" && menuOption.iconPath.isEmpty()) {
-                setImageDrawable(ContextCompat.getDrawable(context, R.drawable.kr_folder))
-            } else if (menuOption.iconPath.isNotEmpty()) {
-                val icon = IconPathAnalysis().loadLogo(context, menuOption, false)
-                if (icon != null) {
-                    setImageDrawable(icon)
-                } else {
-                    setImageDrawable(ContextCompat.getDrawable(context, R.drawable.kr_fab))
-                }
-            } else {
-                setImageDrawable(ContextCompat.getDrawable(context, R.drawable.kr_fab))
-            }
+        if (menuOption.type == "file" && menuOption.iconPath.isEmpty()) {
+            actionPageFab.setImageDrawable(ContextCompat.getDrawable(this, KR.drawable.kr_folder))
+        } else if (menuOption.iconPath.isNotEmpty()) {
+            val icon = IconPathAnalysis().loadLogo(this, menuOption, false)
+            if (icon != null) actionPageFab.setImageDrawable(icon)
+            else actionPageFab.setImageDrawable(ContextCompat.getDrawable(this, KR.drawable.kr_fab))
+        } else {
+            actionPageFab.setImageDrawable(ContextCompat.getDrawable(this, KR.drawable.kr_fab))
         }
     }
 
-    // 右上角菜单的点击操作
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (menuOptions == null) {
-            return false
-        }
-
+        if (menuOptions == null) return false
         onMenuItemClick(menuOptions!![item.itemId])
-
         return true
     }
 
     private fun onMenuItemClick(menuOption: PageMenuOption) {
-        when(menuOption.type) {
-            "refresh", "reload" -> {
-                recreate()
-            }
-            "exit", "finish", "close" -> {
-                finish()
-            }
-            "file" -> {
-                menuItemChooseFile(menuOption)
-            }
-            else -> {
-                menuItemExecute(menuOption, HashMap<String, String>().apply{
-                    put("state", menuOption.key)
-                    put("menu_id", menuOption.key)
-                })
-            }
+        when (menuOption.type) {
+            "refresh", "reload" -> recreate()
+            "exit", "finish", "close" -> finish()
+            "file" -> menuItemChooseFile(menuOption)
+            else -> menuItemExecute(menuOption, HashMap<String, String>().apply {
+                put("state", menuOption.key)
+                put("menu_id", menuOption.key)
+            })
         }
     }
 
     private fun menuItemExecute(menuOption: PageMenuOption, params: HashMap<String, String>) {
         val onDismiss = Runnable {
-            if (menuOption.autoFinish) {
-                finish()
-            } else if (menuOption.reloadPage) {
-                recreate()
-            } else if (menuOption.updateBlocks != null) {
-                // TODO rootGroup.triggerUpdateByKey(item.updateBlocks!!)
-            }
+            if (menuOption.autoFinish) finish()
+            else if (menuOption.reloadPage) recreate()
         }
 
         val darkMode = ThemeModeState.getThemeMode().isDarkMode
-        val dialog = DialogLogFragment.create(
-                menuOption,
-                Runnable {  },
-                onDismiss,
-                currentPageConfig.pageHandlerSh,
-                params,
-                darkMode)
+        val dialog = DialogLogFragment.create(menuOption, Runnable {}, onDismiss, currentPageConfig.pageHandlerSh, params, darkMode)
         dialog.show(supportFragmentManager, "")
         dialog.isCancelable = false
     }
 
     private fun menuItemChooseFile(menuOption: PageMenuOption) {
-        chooseFilePath(object: ParamsFileChooserRender.FileSelectedInterface{
+        chooseFilePath(object : ParamsFileChooserRender.FileSelectedInterface {
             override fun onFileSelected(path: String?) {
                 if (path != null) {
                     handler.post {
-                        menuItemExecute(menuOption, HashMap<String, String>().apply{
+                        menuItemExecute(menuOption, HashMap<String, String>().apply {
                             put("state", menuOption.key)
                             put("menu_id", menuOption.key)
                             put("file", path)
@@ -298,29 +247,20 @@ class ActionPage : AppCompatActivity() {
                 }
             }
 
-            // TODO:文件类型过滤
-            override fun mimeType(): String? {
-                return if (menuOption.mime.isEmpty()) null else menuOption.mime
-            }
-
-            override fun suffix(): String? {
-                return if (menuOption.suffix.isEmpty()) null else menuOption.suffix
-            }
-
-            override fun type(): Int {
-                return when(menuOption.type) {
-                    "folder" -> ParamsFileChooserRender.FileSelectedInterface.TYPE_FOLDER
-                    "file" -> ParamsFileChooserRender.FileSelectedInterface.TYPE_FILE
-                    else -> ParamsFileChooserRender.FileSelectedInterface.TYPE_FILE
-                }
+            override fun mimeType(): String? = if (menuOption.mime.isEmpty()) null else menuOption.mime
+            override fun suffix(): String? = if (menuOption.suffix.isEmpty()) null else menuOption.suffix
+            override fun type(): Int = when (menuOption.type) {
+                "folder" -> ParamsFileChooserRender.FileSelectedInterface.TYPE_FOLDER
+                "file" -> ParamsFileChooserRender.FileSelectedInterface.TYPE_FILE
+                else -> ParamsFileChooserRender.FileSelectedInterface.TYPE_FILE
             }
         })
     }
 
     private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(READ_EXTERNAL_STORAGE), 2);
-            Toast.makeText(this, getString(R.string.kr_write_external_storage), Toast.LENGTH_LONG).show()
+            requestPermissions(arrayOf(READ_EXTERNAL_STORAGE), 2)
+            Toast.makeText(this, getString(KR.string.kr_write_external_storage), Toast.LENGTH_LONG).show()
             return false
         } else {
             return try {
@@ -331,19 +271,15 @@ class ActionPage : AppCompatActivity() {
                     if (!suffix.isNullOrEmpty()) {
                         chooseFilePath(suffix)
                     } else {
-                        val intent = Intent(Intent.ACTION_GET_CONTENT);
+                        val intent = Intent(Intent.ACTION_GET_CONTENT)
                         val mimeType = fileSelectedInterface.mimeType()
-                        if (mimeType != null) {
-                            intent.type = mimeType
-                        } else {
-                            intent.type = "*/*"
-                        }
-                        intent.addCategory(Intent.CATEGORY_OPENABLE);
-                        startActivityForResult(intent, ACTION_FILE_PATH_CHOOSER);
+                        intent.type = mimeType ?: "*/*"
+                        intent.addCategory(Intent.CATEGORY_OPENABLE)
+                        startActivityForResult(intent, ACTION_FILE_PATH_CHOOSER)
                     }
                 }
                 this.fileSelectedInterface = fileSelectedInterface
-                true;
+                true
             } catch (ex: java.lang.Exception) {
                 false
             }
@@ -354,12 +290,8 @@ class ActionPage : AppCompatActivity() {
         if (requestCode == ACTION_FILE_PATH_CHOOSER) {
             val result = if (data == null || resultCode != Activity.RESULT_OK) null else data.data
             if (fileSelectedInterface != null) {
-                if (result != null) {
-                    val absPath = getPath(result)
-                    fileSelectedInterface?.onFileSelected(absPath)
-                } else {
-                    fileSelectedInterface?.onFileSelected(null)
-                }
+                if (result != null) fileSelectedInterface?.onFileSelected(getPath(result))
+                else fileSelectedInterface?.onFileSelected(null)
             }
             this.fileSelectedInterface = null
         } else if (requestCode == ACTION_FILE_PATH_CHOOSER_INNER) {
@@ -371,44 +303,27 @@ class ActionPage : AppCompatActivity() {
     }
 
     private fun getPath(uri: Uri): String? {
-        return try {
-            FilePathResolver().getPath(this, uri)
-        } catch (ex: java.lang.Exception) {
-            null
-        }
+        return try { FilePathResolver().getPath(this, uri) } catch (ex: java.lang.Exception) { null }
     }
 
-    private fun showDialog(msg: String) {
-        handler.post {
-            progressBarDialog.showDialog(msg)
-        }
-    }
-
-    private fun hideDialog() {
-        handler.post {
-            progressBarDialog.hideDialog()
-        }
-    }
+    private fun showDialog(msg: String) { handler.post { progressBarDialog.showDialog(msg) } }
+    private fun hideDialog() { handler.post { progressBarDialog.hideDialog() } }
 
     override fun onResume() {
         super.onResume()
-
-        if (!actionsLoaded) {
-            loadPageConfig()
-        }
+        if (!actionsLoaded) loadPageConfig()
     }
 
     private fun loadPageConfig() {
         val activity = this
-
         Thread(Runnable {
             currentPageConfig.run {
                 if (beforeRead.isNotEmpty()) {
-                    showDialog(getString(R.string.kr_page_before_load))
+                    showDialog(getString(KR.string.kr_page_before_load))
                     ScriptEnvironmen.executeResultRoot(activity, beforeRead, this)
                 }
 
-                showDialog(getString(R.string.kr_page_loading))
+                showDialog(getString(KR.string.kr_page_loading))
                 var items: ArrayList<NodeInfoBase>? = null
 
                 if (pageConfigSh.isNotEmpty()) {
@@ -420,13 +335,13 @@ class ActionPage : AppCompatActivity() {
                 }
 
                 if (afterRead.isNotEmpty()) {
-                    showDialog(getString(R.string.kr_page_after_load))
+                    showDialog(getString(KR.string.kr_page_after_load))
                     ScriptEnvironmen.executeResultRoot(activity, afterRead, this)
                 }
 
                 if (items != null && items.size != 0) {
                     if (loadSuccess.isNotEmpty()) {
-                        showDialog(getString(R.string.kr_page_load_success))
+                        showDialog(getString(KR.string.kr_page_load_success))
                         ScriptEnvironmen.executeResultRoot(activity, loadSuccess, this)
                     }
 
@@ -435,25 +350,24 @@ class ActionPage : AppCompatActivity() {
                             override val key = autoRunItemId
                             override fun onCompleted(result: Boolean?) {
                                 if (result != true) {
-                                    Toast.makeText(this@ActionPage, getString(R.string.kr_auto_run_item_losted), Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(this@ActionPage, getString(KR.string.kr_auto_run_item_losted), Toast.LENGTH_SHORT).show()
                                 }
                             }
                         }
 
                         val fragment = ActionListFragment.create(items, actionShortClickHandler, autoRunTask, ThemeModeState.getThemeMode())
-                        supportFragmentManager.beginTransaction().replace(R.id.main_list, fragment).commitAllowingStateLoss()
+                        supportFragmentManager.beginTransaction().replace(mainList.id, fragment).commitAllowingStateLoss()
                         hideDialog()
                         actionsLoaded = true
                     }
                 } else {
                     if (loadFail.isNotEmpty()) {
-                        showDialog(getString(R.string.kr_page_load_fail))
+                        showDialog(getString(KR.string.kr_page_load_fail))
                         ScriptEnvironmen.executeResultRoot(activity, loadFail, this)
                         hideDialog()
                     }
-
                     handler.post {
-                        Toast.makeText(this@ActionPage, getString(R.string.kr_page_load_fail), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@ActionPage, getString(KR.string.kr_page_load_fail), Toast.LENGTH_SHORT).show()
                     }
                     hideDialog()
                     finish()
@@ -462,12 +376,10 @@ class ActionPage : AppCompatActivity() {
         }).start()
     }
 
-    fun _openPage(pageNode: PageNode) {
-        OpenPageHelper(this).openPage(pageNode)
-    }
+    fun _openPage(pageNode: PageNode) { OpenPageHelper(this).openPage(pageNode) }
 
     override fun onDestroy() {
-        this.setExcludeFromRecents()
+        setExcludeFromRecents()
         super.onDestroy()
     }
 
@@ -476,12 +388,9 @@ class ActionPage : AppCompatActivity() {
             try {
                 val service = this.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
                 for (task in service.appTasks) {
-                    if (task.taskInfo.id == this.taskId) {
-                        task.setExcludeFromRecents(true)
-                    }
+                    if (task.taskInfo.id == this.taskId) task.setExcludeFromRecents(true)
                 }
-            } catch (ex: Exception) {
-            }
+            } catch (ex: Exception) {}
         }
     }
 }

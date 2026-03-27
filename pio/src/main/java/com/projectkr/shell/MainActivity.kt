@@ -1,5 +1,5 @@
 package com.projectkr.shell
-
+import com.omarea.krscript.R as KR
 import android.Manifest
 import android.app.Activity
 import android.content.ComponentName
@@ -33,12 +33,16 @@ import com.omarea.krscript.ui.ParamsFileChooserRender
 import com.omarea.vtools.FloatMonitor
 import com.projectkr.shell.permissions.CheckRootStatus
 import com.projectkr.shell.ui.TabIconHelper
-import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
     private val progressBarDialog = ProgressBarDialog(this)
     private var handler = Handler()
     private var krScriptConfig = KrScriptConfig()
+
+    private lateinit var mainTabhost: android.widget.TabHost
+    private lateinit var mainTabhostCpu: View
+    private lateinit var mainTabhost2: View
+    private lateinit var mainTabhost3: View
 
     private fun checkPermission(permission: String): Boolean = PermissionChecker.checkSelfPermission(this, permission) == PermissionChecker.PERMISSION_GRANTED
 
@@ -47,22 +51,25 @@ class MainActivity : AppCompatActivity() {
         ThemeModeState.switchTheme(this)
         setContentView(R.layout.activity_main)
 
-        //supportActionBar!!.elevation = 0f
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
         setTitle(R.string.app_name)
 
+        mainTabhost = findViewById(R.id.main_tabhost)
+        mainTabhostCpu = findViewById(R.id.main_tabhost_cpu)
+        mainTabhost2 = findViewById(R.id.main_tabhost_2)
+        mainTabhost3 = findViewById(R.id.main_tabhost_3)
+
         krScriptConfig = KrScriptConfig()
 
-
-        main_tabhost.setup()
-        val tabIconHelper = TabIconHelper(main_tabhost, this)
+        mainTabhost.setup()
+        val tabIconHelper = TabIconHelper(mainTabhost, this)
         if (CheckRootStatus.lastCheckResult && krScriptConfig.allowHomePage) {
             tabIconHelper.newTabSpec(getString(R.string.tab_home), getDrawable(R.drawable.tab_home)!!, R.id.main_tabhost_cpu)
         } else {
-            main_tabhost_cpu.visibility = View.GONE
+            mainTabhostCpu.visibility = View.GONE
         }
-        main_tabhost.setOnTabChangedListener {
+        mainTabhost.setOnTabChangedListener {
             tabIconHelper.updateHighlight()
         }
 
@@ -80,14 +87,14 @@ class MainActivity : AppCompatActivity() {
                     updateFavoritesTab(favorites, favoritesConfig)
                     tabIconHelper.newTabSpec(getString(R.string.tab_favorites), ContextCompat.getDrawable(this, R.drawable.tab_favorites)!!, R.id.main_tabhost_2)
                 } else {
-                    main_tabhost_2.visibility = View.GONE
+                    mainTabhost2.visibility = View.GONE
                 }
 
                 if (pages != null && pages.size > 0) {
                     updateMoreTab(pages, page2Config)
                     tabIconHelper.newTabSpec(getString(R.string.tab_pages), ContextCompat.getDrawable(this, R.drawable.tab_pages)!!, R.id.main_tabhost_3)
                 } else {
-                    main_tabhost_3.visibility = View.GONE
+                    mainTabhost3.visibility = View.GONE
                 }
             }
         }).start()
@@ -101,20 +108,18 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (!(checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE) && checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE))) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE), 111);
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE), 111)
         }
     }
 
     private fun getItems(pageNode: PageNode): ArrayList<NodeInfoBase>? {
         var items: ArrayList<NodeInfoBase>? = null
-
         if (pageNode.pageConfigSh.isNotEmpty()) {
             items = PageConfigSh(this, pageNode.pageConfigSh, null).execute()
         }
         if (items == null && pageNode.pageConfigPath.isNotEmpty()) {
             items = PageConfigReader(this.applicationContext, pageNode.pageConfigPath, null).readConfigXml()
         }
-
         return items
     }
 
@@ -133,9 +138,7 @@ class MainActivity : AppCompatActivity() {
             val favoritesConfig = krScriptConfig.favoriteConfig
             val favorites = getItems(favoritesConfig)
             favorites?.run {
-                handler.post {
-                    updateFavoritesTab(this, favoritesConfig)
-                }
+                handler.post { updateFavoritesTab(this, favoritesConfig) }
             }
         }).start()
     }
@@ -144,11 +147,8 @@ class MainActivity : AppCompatActivity() {
         Thread(Runnable {
             val page2Config = krScriptConfig.pageListConfig
             val pages = getItems(page2Config)
-
             pages?.run {
-                handler.post {
-                    updateMoreTab(this, page2Config)
-                }
+                handler.post { updateMoreTab(this, page2Config) }
             }
         }).start()
     }
@@ -156,44 +156,28 @@ class MainActivity : AppCompatActivity() {
     private fun getKrScriptActionHandler(pageNode: PageNode, isFavoritesTab: Boolean): KrScriptActionHandler {
         return object : KrScriptActionHandler {
             override fun onActionCompleted(runnableNode: RunnableNode) {
-                if (runnableNode.autoFinish ) {
+                if (runnableNode.autoFinish) {
                     finishAndRemoveTask()
                 } else if (runnableNode.reloadPage) {
-                    // TODO:多线程优化
-                    if (isFavoritesTab) {
-                        reloadFavoritesTab()
-                    } else {
-                        reloadMoreTab()
-                    }
+                    if (isFavoritesTab) reloadFavoritesTab() else reloadMoreTab()
                 }
             }
 
             override fun addToFavorites(clickableNode: ClickableNode, addToFavoritesHandler: KrScriptActionHandler.AddToFavoritesHandler) {
-                val page = if (clickableNode is PageNode) {
-                    clickableNode
-                } else if (clickableNode is RunnableNode) {
-                    pageNode
-                } else {
-                    return
-                }
+                val page = if (clickableNode is PageNode) clickableNode
+                else if (clickableNode is RunnableNode) pageNode
+                else return
 
                 val intent = Intent()
-
                 intent.component = ComponentName(this@MainActivity.applicationContext, ActionPage::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
-
-                if (clickableNode is RunnableNode) {
-                    intent.putExtra("autoRunItemId", clickableNode.key)
-                }
+                if (clickableNode is RunnableNode) intent.putExtra("autoRunItemId", clickableNode.key)
                 intent.putExtra("page", page)
-
                 addToFavoritesHandler.onAddToFavorites(clickableNode, intent)
             }
 
-            override fun onSubPageClick(pageNode: PageNode) {
-                _openPage(pageNode)
-            }
+            override fun onSubPageClick(pageNode: PageNode) { _openPage(pageNode) }
 
             override fun openFileChooser(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
                 return chooseFilePath(fileSelectedInterface)
@@ -217,8 +201,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(this, getString(R.string.kr_write_external_storage), Toast.LENGTH_LONG).show()
-            requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 2);
+            Toast.makeText(this, getString(KR.string.kr_write_external_storage), Toast.LENGTH_LONG).show()
+            requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 2)
             return false
         } else {
             return try {
@@ -226,18 +210,14 @@ class MainActivity : AppCompatActivity() {
                 if (suffix != null && suffix.isNotEmpty()) {
                     chooseFilePath(suffix)
                 } else {
-                    val intent = Intent(Intent.ACTION_GET_CONTENT);
+                    val intent = Intent(Intent.ACTION_GET_CONTENT)
                     val mimeType = fileSelectedInterface.mimeType()
-                    if (mimeType != null) {
-                        intent.type = mimeType
-                    } else {
-                        intent.type = "*/*"
-                    }
-                    intent.addCategory(Intent.CATEGORY_OPENABLE);
-                    startActivityForResult(intent, ACTION_FILE_PATH_CHOOSER);
+                    intent.type = mimeType ?: "*/*"
+                    intent.addCategory(Intent.CATEGORY_OPENABLE)
+                    startActivityForResult(intent, ACTION_FILE_PATH_CHOOSER)
                 }
                 this.fileSelectedInterface = fileSelectedInterface
-                true;
+                true
             } catch (ex: java.lang.Exception) {
                 false
             }
@@ -248,12 +228,8 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == ACTION_FILE_PATH_CHOOSER) {
             val result = if (data == null || resultCode != Activity.RESULT_OK) null else data.data
             if (fileSelectedInterface != null) {
-                if (result != null) {
-                    val absPath = getPath(result)
-                    fileSelectedInterface?.onFileSelected(absPath)
-                } else {
-                    fileSelectedInterface?.onFileSelected(null)
-                }
+                if (result != null) fileSelectedInterface?.onFileSelected(getPath(result))
+                else fileSelectedInterface?.onFileSelected(null)
             }
             this.fileSelectedInterface = null
         } else if (requestCode == ACTION_FILE_PATH_CHOOSER_INNER) {
@@ -265,16 +241,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getPath(uri: Uri): String? {
-        try {
-            return FilePathResolver().getPath(this, uri)
-        } catch (ex: Exception) {
-            return null
-        }
+        return try { FilePathResolver().getPath(this, uri) } catch (ex: Exception) { null }
     }
 
-    fun _openPage(pageNode: PageNode) {
-        OpenPageHelper(this).openPage(pageNode)
-    }
+    fun _openPage(pageNode: PageNode) { OpenPageHelper(this).openPage(pageNode) }
 
     private fun getDensity(): Int {
         val dm = DisplayMetrics()
@@ -284,9 +254,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main, menu)
-
-        menu.findItem(R.id.action_graph).isVisible = (main_tabhost_cpu.visibility == View.VISIBLE)
-
+        menu.findItem(R.id.action_graph).isVisible = (mainTabhostCpu.visibility == View.VISIBLE)
         return true
     }
 
@@ -295,24 +263,21 @@ class MainActivity : AppCompatActivity() {
             R.id.option_menu_info -> {
                 val layoutInflater = LayoutInflater.from(this)
                 val layout = layoutInflater.inflate(R.layout.dialog_about, null)
-                val transparentUi = layout.findViewById<CompoundButton>(R.id.transparent_ui);
+                val transparentUi = layout.findViewById<CompoundButton>(R.id.transparent_ui)
                 val themeConfig = ThemeConfig(this)
                 transparentUi.setOnClickListener {
                     val isChecked = (it as CompoundButton).isChecked
                     if (isChecked && !checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE)) {
                         it.isChecked = false
-                        Toast.makeText(this@MainActivity, R.string.kr_write_external_storage, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@MainActivity, KR.string.kr_write_external_storage, Toast.LENGTH_SHORT).show()
                     } else {
                         themeConfig.setAllowTransparentUI(isChecked)
                     }
                 }
                 transparentUi.isChecked = themeConfig.getAllowTransparentUI()
-
                 DialogHelper.customDialog(this, layout)
             }
-            R.id.option_menu_reboot -> {
-                DialogPower(this).showPowerMenu()
-            }
+            R.id.option_menu_reboot -> { DialogPower(this).showPowerMenu() }
             R.id.action_graph -> {
                 if (FloatMonitor.isShown == true) {
                     FloatMonitor(this).hidePopupWindow()
@@ -323,20 +288,12 @@ class MainActivity : AppCompatActivity() {
                         FloatMonitor(this).showPopupWindow()
                         Toast.makeText(this, getString(R.string.float_monitor_tips), Toast.LENGTH_LONG).show()
                     } else {
-                        //若没有权限，提示获取
-                        //val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
-                        //startActivity(intent);
                         val intent = Intent()
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         intent.action = "android.settings.APPLICATION_DETAILS_SETTINGS"
                         intent.data = Uri.fromParts("package", this.packageName, null)
-
                         Toast.makeText(applicationContext, getString(R.string.permission_float), Toast.LENGTH_LONG).show()
-
-                        try {
-                            startActivity(intent)
-                        } catch (ex: Exception) {
-                        }
+                        try { startActivity(intent) } catch (ex: Exception) {}
                     }
                 } else {
                     FloatMonitor(this).showPopupWindow()

@@ -594,29 +594,35 @@ class PageConfigReader {
             val attrValue = parser.getAttributeValue(i)
             try {
                 when (attrName) {
-                    "bold", "b" -> textRow.bold = (attrValue == "1" || attrValue == "true" || attrValue == "bold")
-                    "italic", "i" -> textRow.italic = (attrValue == "1" || attrValue == "true" || attrValue == "italic")
-                    "underline", "u" -> textRow.underline = (attrValue == "1" || attrValue == "true" || attrValue == "underline")
+                    "bold", "b" -> textRow.bold =
+                        (attrValue == "1" || attrValue == "true" || attrValue == "bold")
+
+                    "italic", "i" -> textRow.italic =
+                        (attrValue == "1" || attrValue == "true" || attrValue == "italic")
+
+                    "underline", "u" -> textRow.underline =
+                        (attrValue == "1" || attrValue == "true" || attrValue == "underline")
+
                     "foreground", "color" -> textRow.color = Color.parseColor(attrValue)
                     "bg", "background", "bgcolor" -> textRow.bgColor = Color.parseColor(attrValue)
                     "size" -> textRow.size = attrValue.toInt()
-                    "break" -> textRow.breakRow = (attrValue == "1" || attrValue == "true" || attrValue == "break")
+                    "break" -> textRow.breakRow =
+                        (attrValue == "1" || attrValue == "true" || attrValue == "break")
+
                     "link", "href" -> textRow.link = attrValue
                     "activity", "a", "intent" -> textRow.activity = attrValue
                     "script", "run" -> {
                         textRow.onClickScript = attrValue
                     }
+
                     "sh" -> {
                         textRow.dynamicTextSh = attrValue
                     }
+
                     "align" -> {
                         when (attrValue) {
-                            "left" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                                textRow.align = Layout.Alignment.ALIGN_LEFT
-                            }
-                            "right" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                                textRow.align = Layout.Alignment.ALIGN_RIGHT
-                            }
+                            "left" -> textRow.align = Layout.Alignment.ALIGN_NORMAL
+                            "right" -> textRow.align = Layout.Alignment.ALIGN_OPPOSITE
                             "center" -> textRow.align = Layout.Alignment.ALIGN_CENTER
                             "normal" -> textRow.align = Layout.Alignment.ALIGN_NORMAL
                         }

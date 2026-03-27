@@ -24,11 +24,11 @@ class FloatMonitorBatteryView : View {
     private var textSize = 20
     //-------------画笔相关-------------
     //圆环的画笔
-    private var cyclePaint: Paint? = null
+    private lateinit var cyclePaint: Paint
     //文字的画笔
-    private var textPaint: Paint? = null
+    private lateinit var textPaint: Paint
     //标注的画笔
-    private var labelPaint: Paint? = null
+    private lateinit var labelPaint: Paint
     //-------------颜色相关-------------
     //边框颜色和标注颜色
     private val mColor = intArrayOf(-0xec712a, 0x55888888, -0x1a8c8d, -0xb03c09, -0xe8a, -0x7e387c)
@@ -112,21 +112,21 @@ class FloatMonitorBatteryView : View {
     private fun initPaint() {
         //边框画笔
         cyclePaint = Paint()
-        cyclePaint!!.isAntiAlias = true
-        cyclePaint!!.style = Paint.Style.STROKE
-        cyclePaint!!.strokeWidth = mStrokeWidth
+        cyclePaint.isAntiAlias = true
+        cyclePaint.style = Paint.Style.STROKE
+        cyclePaint.strokeWidth = mStrokeWidth
         //文字画笔
         textPaint = Paint()
-        textPaint!!.isAntiAlias = true
-        textPaint!!.color = textColor
-        textPaint!!.style = Paint.Style.STROKE
-        textPaint!!.strokeWidth = 1f
-        textPaint!!.textSize = textSize.toFloat()
+        textPaint.isAntiAlias = true
+        textPaint.color = textColor
+        textPaint.style = Paint.Style.STROKE
+        textPaint.strokeWidth = 1f
+        textPaint.textSize = textSize.toFloat()
         //标注画笔
         labelPaint = Paint()
-        labelPaint!!.isAntiAlias = true
-        labelPaint!!.style = Paint.Style.FILL
-        labelPaint!!.strokeWidth = 2f
+        labelPaint.isAntiAlias = true
+        labelPaint.style = Paint.Style.FILL
+        labelPaint.strokeWidth = 2f
     }
 
     fun cgangePer(per: Int) {
@@ -147,23 +147,23 @@ class FloatMonitorBatteryView : View {
      * @param canvas
      */
     private fun drawCycle(canvas: Canvas) {
-        cyclePaint!!.color = 0x22888888
-        // cyclePaint!!.alpha = 128
+        cyclePaint.color = 0x22888888
+        // cyclePaint.alpha = 128
         canvas.drawArc(RectF(0f, 0f, mRadius, mRadius), 0f, 360f, false, cyclePaint)
         /*
         if (ratio == 0) {
             return
         }
         */
-        // cyclePaint!!.alpha = 255
+        // cyclePaint.alpha = 255
         if (ratioState > 79) {
-            cyclePaint!!.color = resources.getColor(R.color.color_load_low)
+            cyclePaint.color = resources.getColor(R.color.color_load_low)
         } else if (ratioState > 40) {
-            cyclePaint!!.color = resources.getColor(R.color.color_load_mid)
+            cyclePaint.color = resources.getColor(R.color.color_load_mid)
         } else if (ratioState > 25) {
-            cyclePaint!!.color = resources.getColor(R.color.color_load_hight)
+            cyclePaint.color = resources.getColor(R.color.color_load_hight)
         } else {
-            cyclePaint!!.color = resources.getColor(R.color.color_load_veryhight)
+            cyclePaint.color = resources.getColor(R.color.color_load_veryhight)
         }
 
         /*
@@ -184,17 +184,17 @@ class FloatMonitorBatteryView : View {
         matrix.setRotate(-108f, canvas.width / 2f, canvas.height / 2f)
         mSweepGradient.setLocalMatrix(matrix)
 
-        cyclePaint!!.setShader(mSweepGradient)
-        cyclePaint!!.setPathEffect(dashPathEffect);
+        cyclePaint.setShader(mSweepGradient)
+        cyclePaint.setPathEffect(dashPathEffect);
         */
 
-        cyclePaint!!.strokeCap = Paint.Cap.ROUND
+        cyclePaint.strokeCap = Paint.Cap.ROUND
         if (ratio < 1 && (ratioState <= 2)) {
             return
         } else if (ratioState >= 98) {
-            canvas.drawArc(RectF(0f, 0f, mRadius, mRadius), -90f, 360f, false, cyclePaint!!)
+            canvas.drawArc(RectF(0f, 0f, mRadius, mRadius), -90f, 360f, false, cyclePaint)
         } else {
-            canvas.drawArc(RectF(0f, 0f, mRadius, mRadius), -90f, (ratioState * 3.6f), false, cyclePaint!!)
+            canvas.drawArc(RectF(0f, 0f, mRadius, mRadius), -90f, (ratioState * 3.6f), false, cyclePaint)
         }
     }
 }

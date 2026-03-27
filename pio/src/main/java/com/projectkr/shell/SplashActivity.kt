@@ -17,11 +17,13 @@ import android.widget.TextView
 import com.omarea.common.shell.ShellExecutor
 import com.omarea.krscript.executor.ScriptEnvironmen
 import com.projectkr.shell.permissions.CheckRootStatus
-import kotlinx.android.synthetic.main.activity_splash.*
 import java.io.BufferedReader
 import java.io.DataOutputStream
 
 class SplashActivity : Activity() {
+    private lateinit var startLogo: View
+    private lateinit var startStateText: TextView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -33,14 +35,13 @@ class SplashActivity : Activity() {
         }
 
         setContentView(R.layout.activity_splash)
+        startLogo = findViewById(R.id.start_logo)
+        startStateText = findViewById(R.id.start_state_text)
         updateThemeStyle()
 
         checkPermissions()
     }
 
-    /**
-     * 界面主题样式调整
-     */
     private fun updateThemeStyle() {
         getWindow().setNavigationBarColor(getColorAccent())
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -49,46 +50,31 @@ class SplashActivity : Activity() {
             window.setNavigationBarColor(resources.getColor(R.color.splash_bg_color))
         }
 
-        //  得到当前界面的装饰视图
         if (Build.VERSION.SDK_INT >= 21) {
-            val decorView = getWindow().getDecorView();
-            //让应用主题内容占用系统状态栏的空间,注意:下面两个参数必须一起使用 stable 牢固的
+            val decorView = getWindow().getDecorView()
             val option = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-            decorView.setSystemUiVisibility(option);
-            //设置状态栏颜色为透明
+            decorView.setSystemUiVisibility(option)
             getWindow().setStatusBarColor(Color.TRANSPARENT)
         }
     }
 
     private fun getColorAccent(): Int {
         val typedValue = TypedValue()
-        this.theme.resolveAttribute(R.attr.colorAccent, typedValue, true)
+        this.theme.resolveAttribute(android.R.attr.colorAccent, typedValue, true)
         return typedValue.data
     }
 
-    /**
-     * 开始检查必需权限
-     */
     private fun checkPermissions() {
-        start_logo.visibility = View.VISIBLE
+        startLogo.visibility = View.VISIBLE
         checkRoot(Runnable {
-            start_state_text.text = getString(R.string.pio_permission_checking)
+            startStateText.text = getString(R.string.pio_permission_checking)
             hasRoot = true
-
-            /*
-            checkFileWrite(Runnable {
-                startToFinish()
-            })
-            */
             startToFinish()
         })
     }
 
     private fun checkPermission(permission: String): Boolean = PermissionChecker.checkSelfPermission(this.applicationContext, permission) == PermissionChecker.PERMISSION_GRANTED
 
-    /**
-     * 检查权限 主要是文件读写权限
-     */
     private fun checkFileWrite(next: Runnable) {
         Thread(Runnable {
             CheckRootStatus.grantPermission(this)
@@ -131,15 +117,12 @@ class SplashActivity : Activity() {
         CheckRootStatus(this, next).forceGetRoot()
     }
 
-    /**
-     * 启动完成
-     */
     private fun startToFinish() {
-        start_state_text.text = getString(R.string.pop_started)
+        startStateText.text = getString(R.string.pop_started)
 
         val config = KrScriptConfig().init(this)
         if (config.beforeStartSh.isNotEmpty()) {
-            BeforeStartThread(this, config, UpdateLogViewHandler(start_state_text, Runnable {
+            BeforeStartThread(this, config, UpdateLogViewHandler(startStateText, Runnable {
                 gotoHome()
             })).start()
         } else {
@@ -183,19 +166,16 @@ class SplashActivity : Activity() {
     }
 
     private class BeforeStartThread(private var context: Context, private val config: KrScriptConfig, private var updateLogViewHandler: UpdateLogViewHandler) : Thread() {
-        val params = config.getVariables();
+        val params = config.getVariables()
 
         override fun run() {
             try {
                 val process = if (CheckRootStatus.lastCheckResult) ShellExecutor.getSuperUserRuntime() else ShellExecutor.getRuntime()
                 if (process != null) {
                     val outputStream = DataOutputStream(process.outputStream)
-
                     ScriptEnvironmen.executeShell(context, outputStream, config.beforeStartSh, params, null, "pio-splash")
-
                     StreamReadThread(process.inputStream.bufferedReader(), updateLogViewHandler).start()
                     StreamReadThread(process.errorStream.bufferedReader(), updateLogViewHandler).start()
-
                     process.waitFor()
                     updateLogViewHandler.onExit()
                 } else {
@@ -209,14 +189,11 @@ class SplashActivity : Activity() {
 
     private class StreamReadThread(private var reader: BufferedReader, private var updateLogViewHandler: UpdateLogViewHandler) : Thread() {
         override fun run() {
-            var line: String? = ""
+            var line: String?
             while (true) {
                 line = reader.readLine()
-                if (line == null) {
-                    break
-                } else {
-                    updateLogViewHandler.onLogOutput(line)
-                }
+                if (line == null) break
+                else updateLogViewHandler.onLogOutput(line)
             }
         }
     }

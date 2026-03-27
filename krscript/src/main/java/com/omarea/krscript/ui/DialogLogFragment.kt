@@ -12,6 +12,7 @@ import android.text.SpannableString
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.TextView
@@ -21,13 +22,10 @@ import com.omarea.krscript.R
 import com.omarea.krscript.executor.ShellExecutor
 import com.omarea.krscript.model.RunnableNode
 import com.omarea.krscript.model.ShellHandlerBase
-import kotlinx.android.synthetic.main.kr_dialog_log.*
 
 
 class DialogLogFragment : androidx.fragment.app.DialogFragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        // val view = inflater.inflate(R.layout.kr_dialog_log, container, false)
-
         currentView = inflater.inflate(R.layout.kr_dialog_log, container)
         return currentView
     }
@@ -59,9 +57,8 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
         super.onActivityCreated(savedInstanceState)
         if (nodeInfo != null) {
             nodeInfo?.run {
-                // 如果执行完以后需要刷新界面，那么就不允许隐藏日志窗口到后台执行
                 if (reloadPage) {
-                    btn_hide.visibility = View.GONE
+                    currentView.findViewById<Button>(R.id.btn_hide).visibility = View.GONE
                 }
 
                 val shellHandler = openExecutor(this)
@@ -78,57 +75,64 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
     private fun openExecutor(nodeInfo: RunnableNode): ShellHandlerBase? {
         var forceStopRunnable: Runnable? = null
 
-        btn_hide.setOnClickListener {
+        val btnHide = currentView.findViewById<Button>(R.id.btn_hide)
+        val btnExit = currentView.findViewById<Button>(R.id.btn_exit)
+        val btnCopy = currentView.findViewById<Button>(R.id.btn_copy)
+        val shellOutput = currentView.findViewById<TextView>(R.id.shell_output)
+        val actionProgress = currentView.findViewById<ProgressBar>(R.id.action_progress)
+        val titleView = currentView.findViewById<TextView>(R.id.title)
+        val descView = currentView.findViewById<TextView>(R.id.desc)
+
+        btnHide.setOnClickListener {
             closeView()
         }
-        btn_exit.setOnClickListener {
+        btnExit.setOnClickListener {
             if (running) {
                 forceStopRunnable?.run()
             }
             closeView()
         }
 
-        btn_copy.setOnClickListener {
+        btnCopy.setOnClickListener {
             try {
                 val myClipboard: ClipboardManager = this.context!!.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val myClip: ClipData = ClipData.newPlainText("text", shell_output.text.toString())
-                myClipboard.primaryClip = myClip
+                val myClip: ClipData = ClipData.newPlainText("text", shellOutput.text.toString())
+                myClipboard.setPrimaryClip(myClip)
                 Toast.makeText(context, getString(R.string.copy_success), Toast.LENGTH_SHORT).show()
             } catch (ex: Exception) {
                 Toast.makeText(context, getString(R.string.copy_fail), Toast.LENGTH_SHORT).show()
             }
         }
+
         if (nodeInfo.interruptable) {
-            btn_hide?.visibility = View.VISIBLE
-            btn_exit?.visibility = View.VISIBLE
+            btnHide.visibility = View.VISIBLE
+            btnExit.visibility = View.VISIBLE
         } else {
-            btn_hide?.visibility = View.GONE
-            btn_exit?.visibility = View.GONE
+            btnHide.visibility = View.GONE
+            btnExit.visibility = View.GONE
         }
 
         if (!nodeInfo.title.isEmpty()) {
-            title.text = nodeInfo.title
+            titleView.text = nodeInfo.title
         } else {
-            title.visibility = View.GONE
+            titleView.visibility = View.GONE
         }
 
         if (!nodeInfo.desc.isEmpty()) {
-            desc.text = nodeInfo.desc
+            descView.text = nodeInfo.desc
         } else {
-            desc.visibility = View.GONE
+            descView.visibility = View.GONE
         }
 
-        action_progress.isIndeterminate = true
+        actionProgress.isIndeterminate = true
         return MyShellHandler(object : IActionEventHandler {
             override fun onCompleted() {
                 running = false
 
                 onExit.run()
-                if (btn_hide != null) {
-                    btn_hide.visibility = View.GONE
-                    btn_exit.visibility = View.VISIBLE
-                    action_progress.visibility = View.GONE
-                }
+                btnHide.visibility = View.GONE
+                btnExit.visibility = View.VISIBLE
+                actionProgress.visibility = View.GONE
 
                 isCancelable = true
             }
@@ -143,14 +147,14 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
                 running = true
 
                 if (nodeInfo.interruptable && forceStop != null) {
-                    btn_exit.visibility = View.VISIBLE
+                    btnExit.visibility = View.VISIBLE
                 } else {
-                    btn_exit.visibility = View.GONE
+                    btnExit.visibility = View.GONE
                 }
                 forceStopRunnable = forceStop
             }
 
-        }, shell_output, action_progress)
+        }, shellOutput, actionProgress)
     }
 
     @FunctionalInterface
@@ -179,7 +183,7 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
         private val scriptColor = getColor(R.color.kr_shell_log_script)
         private val endColor = getColor(R.color.kr_shell_log_end)
 
-        private var hasError = false // 执行过程是否出现错误
+        private var hasError = false
 
         override fun handleMessage(msg: Message) {
             when (msg.what) {
@@ -230,7 +234,6 @@ class DialogLogFragment : androidx.fragment.app.DialogFragment() {
 
         override fun onStart(msg: Any?) {
             this.logView.text = ""
-            // updateLog(msg, scriptColor)
         }
 
         override fun onExit(msg: Any?) {
