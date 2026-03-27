@@ -39,7 +39,7 @@ class ActionPageOnline : AppCompatActivity() {
     private val progressBarDialog = ProgressBarDialog(this)
     private lateinit var themeMode: ThemeMode
 
-    private lateinit var krOnlineRoot: LinearLayout
+    private lateinit var krOnlineRoot: View
     private lateinit var krOnlineWebview: WebView
     private lateinit var krDownloadUrl: TextView
     private lateinit var krDownloadState: View
