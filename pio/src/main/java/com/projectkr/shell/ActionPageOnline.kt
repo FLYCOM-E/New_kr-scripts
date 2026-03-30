@@ -125,20 +125,24 @@ class ActionPageOnline : AppCompatActivity() {
                     val url = extras.getString("downloadUrl") ?: return
                     val taskAliasId = if (extras.containsKey("taskId")) extras.getString("taskId") ?: UUID.randomUUID().toString() else UUID.randomUUID().toString()
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                        downloader.saveTaskStatus(taskAliasId, 0)
-                        requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE), 2)
-                        DialogHelper.helpInfo(this, "", getString(KR.string.kr_write_external_storage))
-                    } else {
-                        val downloadId = downloader.downloadBySystem(url, null, null, taskAliasId)
-                        if (downloadId != null) {
-                            krDownloadUrl.text = url
-                            val autoClose = extras.containsKey("autoClose") && extras.getBoolean("autoClose")
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                            checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                             downloader.saveTaskStatus(taskAliasId, 0)
-                            watchDownloadProgress(downloadId, autoClose, taskAliasId)
-                        } else {
-                            downloader.saveTaskStatus(taskAliasId, -1)
+                            requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE), 2)
+                            DialogHelper.helpInfo(this, "", getString(KR.string.kr_write_external_storage))
+                            return
                         }
+                    }
+
+                    val downloadId = downloader.downloadBySystem(url, null, null, taskAliasId)
+                    if (downloadId != null) {
+                        krDownloadUrl.text = url
+                        val autoClose = extras.containsKey("autoClose") && extras.getBoolean("autoClose")
+                        downloader.saveTaskStatus(taskAliasId, 0)
+                        watchDownloadProgress(downloadId, autoClose, taskAliasId)
+                    } else {
+                        downloader.saveTaskStatus(taskAliasId, -1)
                     }
                 }
             }
@@ -212,6 +216,18 @@ class ActionPageOnline : AppCompatActivity() {
     private val ACTION_FILE_PATH_CHOOSER = 65400
 
     private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            return try {
+                val intent = Intent(Intent.ACTION_GET_CONTENT)
+                intent.type = "*/*"
+                intent.addCategory(Intent.CATEGORY_OPENABLE)
+                startActivityForResult(intent, ACTION_FILE_PATH_CHOOSER)
+                this.fileSelectedInterface = fileSelectedInterface
+                true
+            } catch (ex: java.lang.Exception) {
+                false
+            }
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE), 2)
             Toast.makeText(this, getString(KR.string.kr_write_external_storage), Toast.LENGTH_LONG).show()

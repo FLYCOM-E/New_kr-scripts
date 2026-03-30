@@ -24,19 +24,22 @@ object ThemeModeState {
         if (activity != null) {
             val uiModeManager = activity.applicationContext.getSystemService(Context.UI_MODE_SERVICE) as UiModeManager
             val nightMode = (uiModeManager.nightMode == UiModeManager.MODE_NIGHT_YES)
-            
-            val useWallpaper = ThemeConfig(activity).getAllowTransparentUI() && 
-                               checkPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE) && 
-                               checkPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-            
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                activity.setTheme(R.style.Theme_KrScript_Dynamic)
+
+            val useWallpaper = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                ThemeConfig(activity).getAllowTransparentUI()
+            } else {
+                ThemeConfig(activity).getAllowTransparentUI() &&
+                        checkPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+
+            if (useWallpaper) {
+                activity.setTheme(R.style.Theme_KrScript_Wallpaper)
             } else {
                 activity.setTheme(R.style.Theme_KrScript)
             }
-            
+
             themeMode.isDarkMode = nightMode
-            
+
             if (useWallpaper) {
                 applyWallpaperBackground(activity, nightMode)
             } else {
@@ -48,40 +51,52 @@ object ThemeModeState {
 
     private fun applyWallpaperBackground(activity: Activity, nightMode: Boolean) {
         try {
-            val wallpaper = WallpaperManager.getInstance(activity)
-            val wallpaperInfo = wallpaper.wallpaperInfo
-            
-            if (wallpaperInfo != null && wallpaperInfo.packageName != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 activity.window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
                 activity.window.setBackgroundDrawable(null)
+                android.util.Log.d("Wallpaper", "Android 13+: FLAG_SHOW_WALLPAPER")
             } else {
-                val wallpaperDrawable = wallpaper.drawable
-                activity.window.setBackgroundDrawable(wallpaperDrawable)
-            }
-        } catch (e: Exception) {
-        }
-        
-        activity.window.run {
-            clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-            addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-            
-            if (nightMode) {
-                statusBarColor = Color.argb(128, 0, 0, 0)
-                navigationBarColor = Color.argb(128, 0, 0, 0)
-                decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-            } else {
-                statusBarColor = Color.argb(128, 255, 255, 255)
-                navigationBarColor = Color.argb(128, 255, 255, 255)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or 
-                                                   View.SYSTEM_UI_FLAG_LAYOUT_STABLE or 
-                                                   View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or 
-                                                   View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+                val wallpaper = WallpaperManager.getInstance(activity)
+                val wallpaperInfo = wallpaper.wallpaperInfo
+
+                if (wallpaperInfo != null && wallpaperInfo.packageName != null) {
+                    activity.window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+                    activity.window.setBackgroundDrawable(null)
                 } else {
-                    decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or 
-                                                   View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                    val wallpaperDrawable = wallpaper.drawable
+                    if (wallpaperDrawable != null) {
+                        activity.window.setBackgroundDrawable(wallpaperDrawable)
+                    } else {
+                        activity.window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+                        activity.window.setBackgroundDrawable(null)
+                    }
                 }
             }
+
+            activity.window.run {
+                clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+                addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+
+                if (nightMode) {
+                    statusBarColor = Color.argb(128, 0, 0, 0)
+                    navigationBarColor = Color.argb(128, 0, 0, 0)
+                } else {
+                    statusBarColor = Color.argb(128, 255, 255, 255)
+                    navigationBarColor = Color.argb(128, 255, 255, 255)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                                View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or
+                                View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+                    } else {
+                        decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                                View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                    }
+                }
+            }
+
+        } catch (e: Exception) {
+            applySystemBars(activity, nightMode)
         }
     }
 

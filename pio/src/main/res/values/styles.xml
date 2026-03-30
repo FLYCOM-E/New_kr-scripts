@@ -15,14 +15,6 @@
         <item name="switchStyle">@style/Widget.Material3.CompoundButton.Switch</item>
         <item name="checkboxStyle">@style/Widget.Material3.CompoundButton.CheckBox</item>
         <item name="radioButtonStyle">@style/Widget.Material3.CompoundButton.RadioButton</item>
-        <!--
-        <item name="colorPrimary">@color/md_primary</item>
-        <item name="colorPrimaryContainer">@color/md_primary_container</item>
-        <item name="colorSecondary">@color/md_secondary</item>
-        <item name="colorSecondaryContainer">@color/md_secondary_container</item>
-        <item name="colorSurface">@color/md_surface</item>
-        <item name="android:colorBackground">@color/md_background</item>
-        -->
     </style>
     <style name="Theme.KrScript.AppBarOverlay" parent="ThemeOverlay.Material3.Toolbar.Surface">
         <item name="titleTextColor">?android:attr/textColorPrimary</item>
@@ -70,6 +62,13 @@
         <item name="android:layout_marginTop">8dp</item>
         <item name="android:layout_marginLeft">8dp</item>
         <item name="android:layout_marginRight">8dp</item>
+    </style>
+    <style name="Theme.KrScript.Wallpaper" parent="Theme.KrScript">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:colorBackground">@android:color/transparent</item>
+        <item name="colorSurface">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowContentOverlay">@null</item>
     </style>
     <style name="AppTheme" parent="Theme.KrScript" />
     <style name="AppThemeDark" parent="Theme.KrScript" />

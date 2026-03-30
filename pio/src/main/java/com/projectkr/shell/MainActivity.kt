@@ -200,11 +200,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun chooseFilePath(fileSelectedInterface: ParamsFileChooserRender.FileSelectedInterface): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(this, getString(KR.string.kr_write_external_storage), Toast.LENGTH_LONG).show()
-            requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 2)
-            return false
-        } else {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             return try {
                 val suffix = fileSelectedInterface.suffix()
                 if (suffix != null && suffix.isNotEmpty()) {
@@ -221,6 +217,27 @@ class MainActivity : AppCompatActivity() {
             } catch (ex: java.lang.Exception) {
                 false
             }
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, getString(KR.string.kr_write_external_storage), Toast.LENGTH_LONG).show()
+            requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 2)
+            return false
+        }
+        return try {
+            val suffix = fileSelectedInterface.suffix()
+            if (suffix != null && suffix.isNotEmpty()) {
+                chooseFilePath(suffix)
+            } else {
+                val intent = Intent(Intent.ACTION_GET_CONTENT)
+                val mimeType = fileSelectedInterface.mimeType()
+                intent.type = mimeType ?: "*/*"
+                intent.addCategory(Intent.CATEGORY_OPENABLE)
+                startActivityForResult(intent, ACTION_FILE_PATH_CHOOSER)
+            }
+            this.fileSelectedInterface = fileSelectedInterface
+            true
+        } catch (ex: java.lang.Exception) {
+            false
         }
     }
 
@@ -267,11 +284,19 @@ class MainActivity : AppCompatActivity() {
                 val themeConfig = ThemeConfig(this)
                 transparentUi.setOnClickListener {
                     val isChecked = (it as CompoundButton).isChecked
-                    if (isChecked && !checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                        it.isChecked = false
-                        Toast.makeText(this@MainActivity, KR.string.kr_write_external_storage, Toast.LENGTH_SHORT).show()
+                    if (isChecked) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            themeConfig.setAllowTransparentUI(true)
+                        } else {
+                            if (!checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                                it.isChecked = false
+                                Toast.makeText(this@MainActivity, KR.string.kr_write_external_storage, Toast.LENGTH_SHORT).show()
+                            } else {
+                                themeConfig.setAllowTransparentUI(true)
+                            }
+                        }
                     } else {
-                        themeConfig.setAllowTransparentUI(isChecked)
+                        themeConfig.setAllowTransparentUI(false)
                     }
                 }
                 transparentUi.isChecked = themeConfig.getAllowTransparentUI()
