@@ -18,4 +18,11 @@
     <color name="colorPrimary">#80B4DD</color>
     <color name="colorPrimaryDark">#3D9AE6</color>
     <color name="splash_bg_color">#8199B1</color>
+    
+    <color name="md_primary">#6750A4</color>
+    <color name="md_primary_container">#EADDFF</color>
+    <color name="md_secondary">#625B71</color>
+    <color name="md_secondary_container">#E8DEF8</color>
+    <color name="md_surface">#FFFBFE</color>
+    <color name="md_background">#FFFBFE</color>
 </resources>

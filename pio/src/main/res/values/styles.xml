@@ -1,77 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <style name="AppTheme" parent="Base.Theme.AppCompat.Light">
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+    <style name="Theme.KrScript" parent="Theme.Material3.DayNight">
+        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:navigationBarColor">?attr/colorSurface</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:windowTranslucentStatus">false</item>
         <item name="android:windowTranslucentNavigation">false</item>
-        <item name="android:statusBarColor">@color/status_bg_light</item>
-        <item name="android:navigationBarColor">@android:color/white</item>
+        <item name="android:windowBackground">?attr/colorSurface</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:windowAnimationStyle">@style/activityAnim</item>
-        <item name="android:actionBarTheme">@style/AppTheme.AppBarOverlay.Light</item>
-        <item name="android:windowBackground">@color/window_bg_light</item>
-        <item name="cardBg">@color/cardBgLight</item>
-        <item name="android:switchStyle">@style/SceneSwitch</item>
-        <item name="android:seekBarStyle">@style/SceneSeekBar</item>
-        <item name="android:checkboxStyle">@style/SceneCheckBox</item>
-        <item name="android:radioButtonStyle">@style/SceneRadioBox</item>
+        <item name="actionBarTheme">@style/Theme.KrScript.AppBarOverlay</item>
+        <item name="cardBg">?attr/colorSurfaceContainer</item>
+        <!--<item name="switchStyle">@style/Widget.Material3.CompoundButton.Switch</item>-->
+        <!--<item name="seekBarStyle">@style/Widget.Material3.SeekBar</item>-->
+        <!--<item name="checkboxStyle">@style/Widget.Material3.CompoundButton.CheckBox</item>-->
+        <!--<item name="radioButtonStyle">@style/Widget.Material3.CompoundButton.RadioButton</item>-->
+        <item name="colorPrimary">@color/md_primary</item>
+        <item name="colorPrimaryContainer">@color/md_primary_container</item>
+        <item name="colorSecondary">@color/md_secondary</item>
+        <item name="colorSecondaryContainer">@color/md_secondary_container</item>
+        <item name="colorSurface">@color/md_surface</item>
+        <item name="android:colorBackground">@color/md_background</item>
     </style>
-
-    <style name="AppThemeDark" parent="Theme.AppCompat">
-        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-        <item name="android:windowTranslucentStatus">false</item>
-        <item name="android:windowTranslucentNavigation">false</item>
-        <item name="android:statusBarColor">@color/status_bg_dark</item>
-        <item name="android:windowBackground">@color/window_bg_dark</item>
-        <item name="android:navigationBarColor">@color/status_bg_dark</item>
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-        <item name="android:windowAnimationStyle">@style/activityAnim</item>
-        <item name="android:actionBarTheme">@style/AppTheme.AppBarOverlay</item>
-        <item name="cardBg">@color/cardBgDark</item>
-        <item name="android:switchStyle">@style/SceneSwitch</item>
-        <item name="android:seekBarStyle">@style/SceneSeekBar</item>
-        <item name="android:checkboxStyle">@style/SceneCheckBox</item>
-        <item name="android:radioButtonStyle">@style/SceneRadioBox</item>
-    </style>
-
-    <style name="AppTheme.AppBarOverlay.Light" parent="ThemeOverlay.AppCompat.ActionBar">
-        <item name="titleTextColor">?android:textColorPrimary</item>
-        <item name="subtitleTextColor">?android:textColorSecondary</item>
-        <item name="colorControlNormal">?android:textColorPrimary</item>
-        <item name="android:foregroundTint">?android:textColorSecondary</item>
+    <style name="Theme.KrScript.AppBarOverlay" parent="ThemeOverlay.Material3.Toolbar.Surface">
+        <item name="titleTextColor">?android:attr/textColorPrimary</item>
+        <item name="subtitleTextColor">?android:attr/textColorSecondary</item>
+        <item name="colorControlNormal">?android:attr/textColorPrimary</item>
+        <item name="android:foregroundTint">?android:attr/textColorSecondary</item>
         <item name="android:foregroundTintMode">screen</item>
     </style>
-
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.ActionBar">
-        <item name="titleTextColor">?android:textColorPrimary</item>
-        <item name="subtitleTextColor">?android:textColorSecondary</item>
-        <item name="colorControlNormal">?android:textColorPrimary</item>
-        <item name="android:foregroundTint">?android:textColorSecondary</item>
-        <item name="android:foregroundTintMode">screen</item>
-    </style>
-
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
-
+    <style name="Theme.KrScript.PopupOverlay" parent="ThemeOverlay.Material3.Dialog" />
     <style name="textTitle">
         <item name="android:textColor">?android:attr/textColorPrimary</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textSize">14dp</item>
     </style>
-
     <style name="textSmall">
         <item name="android:textColor">?android:attr/textColorSecondary</item>
         <item name="android:textSize">11dp</item>
     </style>
-
-
     <style name="activityAnim">
         <item name="android:activityOpenEnterAnimation">@anim/activity_open_enter</item>
         <item name="android:activityOpenExitAnimation">@anim/activity_open_exit</item>
@@ -82,7 +50,6 @@
         <item name="android:taskCloseEnterAnimation">@anim/task_close_enter</item>
         <item name="android:taskCloseExitAnimation">@anim/task_close_exit</item>
     </style>
-
     <style name="ListCardItem">
         <item name="android:layout_marginLeft">@dimen/activity_horizontal_margin</item>
         <item name="android:layout_marginRight">@dimen/activity_horizontal_margin</item>
@@ -103,4 +70,9 @@
         <item name="android:layout_marginLeft">8dp</item>
         <item name="android:layout_marginRight">8dp</item>
     </style>
+    <style name="AppTheme" parent="Theme.KrScript" />
+    <style name="AppThemeDark" parent="Theme.KrScript" />
+    <style name="AppThemeWallpaper" parent="Theme.KrScript" />
+    <style name="AppThemeWallpaperLight" parent="Theme.KrScript" />
+    <style name="AppTheme.PopupOverlay" parent="Theme.KrScript.PopupOverlay" />
 </resources>
