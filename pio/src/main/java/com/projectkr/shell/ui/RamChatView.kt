@@ -8,8 +8,18 @@ import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 import com.projectkr.shell.R
+import androidx.core.content.ContextCompat
+import com.google.android.material.R as materialR
 
 class RamChatView : View {
+    private fun getDynamicColor(): Int {
+        val typedValue = android.util.TypedValue()
+        return if (context.theme.resolveAttribute(androidx.appcompat.R.attr.colorPrimary, typedValue, true)) {
+            typedValue.data
+        } else {
+            ContextCompat.getColor(context, R.color.md_primary)
+        }
+    }
     //-------------必须给的数据相关-------------
     private val str = arrayOf("已用", "可用")
     private var ratio = 0
@@ -125,7 +135,7 @@ class RamChatView : View {
             return
         }
 
-        cyclePaint.color = resources.getColor(R.color.colorAccent)
+        cyclePaint.color = getDynamicColor()
         cyclePaint.alpha = (ratio * 255 / 100);
 
         canvas.drawArc(RectF(0f, 0f, mRadius, mRadius), -90f, (ratioState * 3.6f) + 1f, false, cyclePaint)

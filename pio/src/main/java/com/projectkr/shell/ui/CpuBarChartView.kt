@@ -8,8 +8,18 @@ import android.util.AttributeSet
 import android.view.View
 import com.projectkr.shell.R
 import java.util.concurrent.LinkedBlockingQueue
+import androidx.core.content.ContextCompat
+import com.google.android.material.R as materialR
 
 class CpuChartBarView : View {
+    private fun getDynamicColor(): Int {
+        val typedValue = android.util.TypedValue()
+        return if (context.theme.resolveAttribute(androidx.appcompat.R.attr.colorPrimary, typedValue, true)) {
+            typedValue.data
+        } else {
+            ContextCompat.getColor(context, R.color.md_primary)
+        }
+    }
     private var mainPaint: Paint? = null
     private var mHeight: Float = 0f
     private var mWidth: Float = 0f
@@ -60,7 +70,7 @@ class CpuChartBarView : View {
             mainPaint!!.style = Paint.Style.FILL
             strokeWidth = this.width.toFloat() / 5
             mainPaint!!.strokeWidth = 0f
-            mainPaint!!.color = resources.getColor(R.color.colorAccent)
+            mainPaint!!.color = getDynamicColor()
         }
 
         var index = 0

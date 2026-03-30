@@ -8,8 +8,18 @@ import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 import com.projectkr.shell.R
+import androidx.core.content.ContextCompat
+import com.google.android.material.R as materialR
 
 class CpuChartView : View {
+    private fun getDynamicColor(): Int {
+        val typedValue = android.util.TypedValue()
+        return if (context.theme.resolveAttribute(androidx.appcompat.R.attr.colorPrimary, typedValue, true)) {
+            typedValue.data
+        } else {
+            ContextCompat.getColor(context, R.color.md_primary)
+        }
+    }
     //-------------必须给的数据相关-------------
     private val str = arrayOf("已用", "可用")
     private var ratio = 0
@@ -138,7 +148,7 @@ class CpuChartView : View {
             return
         }
         */
-        cyclePaint.color = resources.getColor(R.color.colorAccent)
+        cyclePaint.color = getDynamicColor()
         cyclePaint.alpha = (ratio * 255 / 100);
 
         if (ratio < 1 && (ratioState <= 2)) {
