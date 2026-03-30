@@ -73,7 +73,7 @@
                 android:padding="5dp"
                 android:scaleType="centerInside"
                 android:src="@drawable/kr_copy"
-                android:tint="?android:colorAccent" />
+                android:tint="?attr/colorPrimary" />
 
             <TextView
                 android:layout_width="0dp"
@@ -81,7 +81,7 @@
                 android:layout_weight="1"
                 android:paddingEnd="10dp"
                 android:text="@string/btn_copy_output"
-                android:textColor="?android:colorAccent"
+                android:textColor="?attr/colorPrimary"
                 android:textSize="13dp"
                 android:textStyle="bold" />
         </LinearLayout>

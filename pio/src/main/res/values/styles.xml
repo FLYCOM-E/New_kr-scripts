@@ -12,10 +12,9 @@
         <item name="android:windowAnimationStyle">@style/activityAnim</item>
         <item name="actionBarTheme">@style/Theme.KrScript.AppBarOverlay</item>
         <item name="cardBg">?attr/colorSurfaceContainer</item>
-        <!--<item name="switchStyle">@style/Widget.Material3.CompoundButton.Switch</item>-->
-        <!--<item name="seekBarStyle">@style/Widget.Material3.SeekBar</item>-->
-        <!--<item name="checkboxStyle">@style/Widget.Material3.CompoundButton.CheckBox</item>-->
-        <!--<item name="radioButtonStyle">@style/Widget.Material3.CompoundButton.RadioButton</item>-->
+        <item name="switchStyle">@style/Widget.Material3.CompoundButton.Switch</item>
+        <item name="checkboxStyle">@style/Widget.Material3.CompoundButton.CheckBox</item>
+        <item name="radioButtonStyle">@style/Widget.Material3.CompoundButton.RadioButton</item>
         <item name="colorPrimary">@color/md_primary</item>
         <item name="colorPrimaryContainer">@color/md_primary_container</item>
         <item name="colorSecondary">@color/md_secondary</item>
