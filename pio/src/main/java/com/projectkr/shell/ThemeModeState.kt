@@ -29,7 +29,12 @@ object ThemeModeState {
                                checkPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE) && 
                                checkPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE)
             
-            activity.setTheme(R.style.Theme_KrScript)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                activity.setTheme(R.style.Theme_KrScript_Dynamic)
+            } else {
+                activity.setTheme(R.style.Theme_KrScript)
+            }
+            
             themeMode.isDarkMode = nightMode
             
             if (useWallpaper) {
